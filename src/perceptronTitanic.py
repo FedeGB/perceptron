@@ -2,15 +2,15 @@ import tensorflow as tf
 import os
 from sklearn.cross_validation import train_test_split # por algun motivo me toma una version vieja de sklearn
 import numpy as np
-#parámetros usados para entrenar la red
-learning_rate = 0.001 # tasa de aprendizaje
-num_steps = 1000 # cantidad de pasos de entrenamiento
-batch_size = 2 # cantidad de ejemplos por paso
-display_step = 100 # cada cuánto imprime algo por pantalla
-# Parámetros para la construcción de la red
-n_hidden_1 = 256 # número de neuronas en la capa oculta 1
-n_hidden_2 = 256 # número de neuronas en la capa oculta 2
-#num_input = 8
+#parametros usados para entrenar la red
+learning_rate = 0.02 # tasa de aprendizaje
+num_steps = 2000 # cantidad de pasos de entrenamiento
+batch_size = 256 # cantidad de ejemplos por paso
+display_step = 100 # cada cuanto imprime algo por pantalla
+# Parametros para la construcción de la red
+n_hidden_1 = 512 # numero de neuronas en la capa oculta 1
+n_hidden_2 = 512 # numero de neuronas en la capa oculta 2
+num_input = 6
 num_classes = 2
 
 # Definimos la red neuronal
@@ -72,17 +72,13 @@ def processTrainCsv(input_file):
 					line_values[7] = int(line_values[7])
 					line_values[8] = int(line_values[8])
 					line_values[10] = float(line_values[10])
-					if line_values[12] == 'S':
-						line_values[12] = 0
-					elif line_values[12] == 'Q':
-						line_values[12] = 1
-					else:
-						line_values[12] = 2
+					del line_values[12] #embark
 					del line_values[11] # cabin
 					del line_values[9] # ticket
 					del line_values[4] # name
-					del line_values[3] #last name
-					del line_values[1] #survived
+					del line_values[3] # last name
+					del line_values[1] # survived
+					del line_values[0] # id
 					input_matrix.append(np.array(line_values))
 					input_survivors.append(survival)
 	return input_matrix, input_survivors
