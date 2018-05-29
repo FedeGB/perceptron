@@ -3,15 +3,16 @@ import os
 from sklearn.cross_validation import train_test_split # por algun motivo me toma una version vieja de sklearn
 import numpy as np
 #parametros usados para entrenar la red
-learning_rate = 0.002 # tasa de aprendizaje
-num_steps = 2000 # cantidad de pasos de entrenamiento
-batch_size = 256 # cantidad de ejemplos por paso
+learning_rate = 0.5 # tasa de aprendizaje
+num_steps = 1000 # cantidad de pasos de entrenamiento
+batch_size = 512 # cantidad de ejemplos por paso
 display_step = 100 # cada cuanto imprime algo por pantalla
 # Parametros para la construcción de la red
-n_hidden_1 = 256 # numero de neuronas en la capa oculta 1
-n_hidden_2 = 256 # numero de neuronas en la capa oculta 2
-n_hidden_3 = 256 # numero de neuronas en la capa oculta 3
-num_input = 5
+n_hidden_1 = 512 # numero de neuronas en la capa oculta 1
+n_hidden_2 = 512 # numero de neuronas en la capa oculta 2
+n_hidden_3 = 512 # numero de neuronas en la capa oculta 3
+n_hidden_4 = 512 # numero de neuronas en la capa oculta 4
+num_input = 6
 num_classes = 2
 
 # Definimos la red neuronal
@@ -20,7 +21,8 @@ def neural_net (x_dict):
 	layer_1 = tf.layers.dense(x, n_hidden_1)
 	layer_2 = tf.layers.dense(layer_1, n_hidden_2)
 	layer_3 = tf.layers.dense(layer_2, n_hidden_3)
-	out_layer = tf.layers.dense(layer_3, num_classes)
+	layer_4 = tf.layers.dense(layer_3, n_hidden_4)
+	out_layer = tf.layers.dense(layer_4, num_classes)
 	return out_layer
 
 def model_fn (features, labels, mode):
@@ -64,6 +66,8 @@ def processTrainCsv(input_file):
 		sibSPmax = 0
 		parchmin = 0
 		parchmax = 0
+		# faremin = 100
+		# faremax = 0
     # Skip header
 		next(inf)
 		for line in inf:
@@ -90,6 +94,10 @@ def processTrainCsv(input_file):
 			if(line_values[8] > parchmax):
 				parchmax = line_values[8]
 			# line_values[10] = float(line_values[10])
+			# if(line_values[10] > faremax):
+			# 	faremax = line_values[10]
+			# elif(line_values[10] < faremin):
+			# 	faremin = line_values[10]
 			del line_values[12] # embark
 			del line_values[11] # cabin
 			del line_values[10] # fare
@@ -106,6 +114,7 @@ def processTrainCsv(input_file):
 			value[2] = normalize(value[2], maxAge, minAge)
 			value[3] = normalize(value[3], sibSPmax, sibSPmin)
 			value[4] = normalize(value[4], parchmax, parchmin)
+			# value[5] = normalize(value[5], faremax, faremin)
 	return input_matrix, input_survivors
 
 def normalize(xi, maxX, minX):
