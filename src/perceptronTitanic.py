@@ -3,14 +3,15 @@ import os
 from sklearn.cross_validation import train_test_split # por algun motivo me toma una version vieja de sklearn
 import numpy as np
 #parametros usados para entrenar la red
-learning_rate = 0.02 # tasa de aprendizaje
+learning_rate = 0.002 # tasa de aprendizaje
 num_steps = 2000 # cantidad de pasos de entrenamiento
 batch_size = 256 # cantidad de ejemplos por paso
 display_step = 100 # cada cuanto imprime algo por pantalla
 # Parametros para la construcción de la red
-n_hidden_1 = 512 # numero de neuronas en la capa oculta 1
-n_hidden_2 = 512 # numero de neuronas en la capa oculta 2
-num_input = 6
+n_hidden_1 = 256 # numero de neuronas en la capa oculta 1
+n_hidden_2 = 256 # numero de neuronas en la capa oculta 2
+n_hidden_3 = 256 # numero de neuronas en la capa oculta 3
+num_input = 5
 num_classes = 2
 
 # Definimos la red neuronal
@@ -18,7 +19,8 @@ def neural_net (x_dict):
 	x = x_dict['passangers'] 
 	layer_1 = tf.layers.dense(x, n_hidden_1)
 	layer_2 = tf.layers.dense(layer_1, n_hidden_2)
-	out_layer = tf.layers.dense(layer_2, num_classes)
+	layer_3 = tf.layers.dense(layer_2, n_hidden_3)
+	out_layer = tf.layers.dense(layer_3, num_classes)
 	return out_layer
 
 def model_fn (features, labels, mode):
@@ -54,34 +56,60 @@ def processTrainCsv(input_file):
 	input_matrix = []
 	input_survivors = []
 	with open(filename) as inf:
-        # Skip header
-				next(inf)
-				for line in inf:
-					line_values = line.strip().split(",")
-					if line_values[6] == '':
-						continue
-					survival = int(line_values[1])
-					line_values[0] = int(line_values[0])
-					line_values[1] = int(line_values[1])
-					line_values[2] = int(line_values[2])
-					if line_values[5] == 'male':
-						line_values[5] = 0
-					else:
-						line_values[5] = 1
-					line_values[6] = float(line_values[6])
-					line_values[7] = int(line_values[7])
-					line_values[8] = int(line_values[8])
-					line_values[10] = float(line_values[10])
-					del line_values[12] #embark
-					del line_values[11] # cabin
-					del line_values[9] # ticket
-					del line_values[4] # name
-					del line_values[3] # last name
-					del line_values[1] # survived
-					del line_values[0] # id
-					input_matrix.append(np.array(line_values))
-					input_survivors.append(survival)
+		minAge = 100
+		maxAge = 0
+		minClass = 1
+		maxClass = 3
+		sibSPmin = 0
+		sibSPmax = 0
+		parchmin = 0
+		parchmax = 0
+    # Skip header
+		next(inf)
+		for line in inf:
+			line_values = line.strip().split(",")
+			if line_values[6] == '':
+				continue
+			survival = int(line_values[1])
+			line_values[0] = int(line_values[0])
+			line_values[1] = int(line_values[1])
+			line_values[2] = int(line_values[2])
+			if line_values[5] == 'male':
+				line_values[5] = 0
+			else:
+				line_values[5] = 1
+			line_values[6] = float(line_values[6])
+			if(line_values[6] > maxAge):
+				maxAge = line_values[6]
+			elif line_values[6] < minAge:
+				minAge = line_values[6]
+			line_values[7] = int(line_values[7])
+			if(line_values[7] > sibSPmax):
+				sibSPmax = line_values[7]
+			line_values[8] = int(line_values[8])
+			if(line_values[8] > parchmax):
+				parchmax = line_values[8]
+			# line_values[10] = float(line_values[10])
+			del line_values[12] # embark
+			del line_values[11] # cabin
+			del line_values[10] # fare
+			del line_values[9] # ticket
+			del line_values[4] # name
+			del line_values[3] # last name
+			del line_values[1] # survived
+			del line_values[0] # id
+
+			input_matrix.append(np.array(line_values))
+			input_survivors.append(survival)
+		for value in input_matrix:
+			value[0] = normalize(value[0], maxClass, minClass)
+			value[2] = normalize(value[2], maxAge, minAge)
+			value[3] = normalize(value[3], sibSPmax, sibSPmin)
+			value[4] = normalize(value[4], parchmax, parchmin)
 	return input_matrix, input_survivors
+
+def normalize(xi, maxX, minX):
+	return ((xi - minX) * 1.0 / (maxX - minX) * 1.0)
 
 train_1, train_2 = processTrainCsv('train.csv')
 trainX, testX, trainY, testY = train_test_split(train_1, train_2, test_size=0.33, random_state=42)
